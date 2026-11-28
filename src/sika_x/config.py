@@ -1,5 +1,5 @@
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
 
@@ -12,6 +12,7 @@ class Settings:
     database_url: str
     llm_provider: str
     llm_model: str
+    llm_api_key: str = field(default="", repr=False)
 
 
 def load_settings(use_dotenv: bool = True) -> Settings:
@@ -24,5 +25,6 @@ def load_settings(use_dotenv: bool = True) -> Settings:
         timezone=os.getenv("TIMEZONE", "Africa/Accra"),
         database_url=os.getenv("DATABASE_URL", "sqlite:///./sika_x.db"),
         llm_provider=os.getenv("LLM_PROVIDER", "mock"),
-        llm_model=os.getenv("LLM_MODEL", "none"),
+        llm_model=os.getenv("LLM_MODEL", "gemini-4-hydrogen"),
+        llm_api_key=os.getenv("LLM_API_KEY", ""),
     )

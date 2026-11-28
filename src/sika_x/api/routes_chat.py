@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from sika_x.core.pipeline import handle_message
+from sika_x.llm.base import LLMClient
 from sika_x.models import ChatRequest, ChatResponse, Message
 
 router = APIRouter()
@@ -13,6 +14,10 @@ def get_db(request: Request) -> Iterator[Session]:
     session_factory = request.app.state.session_factory
     with session_factory() as db:
         yield db
+
+
+def get_llm(request: Request) -> LLMClient:
+    return request.app.state.llm_client
 
 
 @router.get("/health")
@@ -25,11 +30,12 @@ def chat(
     payload: ChatRequest,
     request: Request,
     db: Session = Depends(get_db),
+    llm: LLMClient = Depends(get_llm),
 ) -> ChatResponse:
     msg = Message(
         channel=payload.channel,
         channel_uid=payload.user_id,
         text=payload.text,
     )
-    reply = handle_message(msg=msg, db=db, request_id=request.state.request_id)
+    reply = handle_message(msg=msg, db=db, request_id=request.state.request_id, llm=llm)
     return ChatResponse(reply=reply.text, request_id=reply.request_id)

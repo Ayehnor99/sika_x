@@ -1,4 +1,4 @@
-from sika_x.config import load_settings
+from sika_x.config import Settings, load_settings
 
 
 def test_load_settings_defaults(monkeypatch):
@@ -18,3 +18,16 @@ def test_load_settings_from_env(monkeypatch):
     settings = load_settings(use_dotenv=False)
 
     assert settings.app_env == "staging"
+
+
+def test_settings_hides_api_key_in_repr():
+    settings = Settings(
+        app_env="dev",
+        log_level="INFO",
+        timezone="Africa/Accra",
+        database_url="sqlite:///./sika_x.db",
+        llm_provider="gemini",
+        llm_model="gemini-4-hydrogen",
+        llm_api_key="AIza-super-secret-do-not-leak",
+    )
+    assert "AIza-super-secret" not in repr(settings)

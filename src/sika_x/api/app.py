@@ -6,11 +6,16 @@ from fastapi import FastAPI, Request
 from sika_x.api.routes_chat import router as chat_router
 from sika_x.config import Settings, load_settings
 from sika_x.db import init_db, make_engine, make_session_factory
+from sika_x.llm.base import LLMClient
+from sika_x.llm.provider import build_llm_client
 
 logger = logging.getLogger("sika_x.api")
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    llm_client: LLMClient | None = None,
+) -> FastAPI:
     cfg = settings or load_settings()
     logging.basicConfig(
         level=getattr(logging, cfg.log_level.upper(), logging.INFO),
@@ -23,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="sika_x", version="0.1.0")
     app.state.settings = cfg
     app.state.session_factory = make_session_factory(engine)
+    app.state.llm_client = llm_client if llm_client is not None else build_llm_client(cfg)
 
     @app.middleware("http")
     async def request_id_middleware(request: Request, call_next):
